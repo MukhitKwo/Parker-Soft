@@ -1,2 +1,1 @@
-"# Parker-Soft" 
-"# Parker-Soft" 
+Software used to move Parker, the hexapod.
