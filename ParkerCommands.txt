@@ -7,12 +7,14 @@ walk l 1
 walk r 2
 rotate r 5
 rotate l 6
-define upd 180
+define upc 180
 define rise 30
 set 0
 set 1
 set 2
 set 3
+set 1 fix
+set 2 fix
 turn off
 turn off 0
 turn 1 111 off
