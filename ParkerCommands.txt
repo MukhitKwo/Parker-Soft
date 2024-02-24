@@ -1,0 +1,25 @@
+move 1 111 90 60 30
+move tri lrl 111 90 60 30
+move all 111 90 60 30
+walk f 3
+walk b 4
+walk l 1
+walk r 2
+rotate r 5
+rotate l 6
+define upd 180
+define rise 30
+set 0
+set 1
+set 2
+set 3
+turn off
+turn off 0
+turn 1 111 off
+turn all 011 off
+show info
+show done true
+play spin 4
+play jump 3
+play step 5
+play wave 2
