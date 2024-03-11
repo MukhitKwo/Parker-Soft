@@ -122,7 +122,7 @@ int degWK[6][2] = {
   { 10, 20 }    //middle > tibia (->)
 };
 
-int updates = 100;
+int updates = 90;
 int8_t rise = 30;
 
 void MovWalk(int typeWalk, int8_t direction, int8_t times) {
@@ -213,13 +213,13 @@ void LeftRight(int8_t cycle, int8_t cycleBinary, int x, int y, int8_t times, int
     pca2.setPWM(5, 0, 115 + (180 - (((float)(degWK[2][0] - degWK[2][1]) / updates) * MovHalf(aFixed, 1, x, times, cycle) + degWK[2][1])) * 2.694);  //its finishing at 30, need 20
     //
     pca1.setPWM(6, 0, 115 + (180 - (((float)(degWK[0][0] - (degWK[0][0] + degWK[0][1])) / updates) * MovHalf(aFixed, 1, x, times, cycle) + (degWK[0][0] + degWK[0][1]))) * 2.694);
-    pca1.setPWM(7, 0, 115 + (180 - MovRise(degWK[1][1], degWK[1][0], 3, 1, aFixed, cycleBinary, cycle, times, direction)) * 2.694);
+    pca1.setPWM(7, 0, 115 + (180 - MovRise(degWK[1][1], degWK[1][0], 1, 1, aFixed, cycleBinary, cycle, times, direction)) * 2.694);
     pca1.setPWM(8, 0, 115 + (180 - (((float)(degWK[2][1] - degWK[2][0]) / updates) * MovHalf(aFixed, 1, x, times, cycle) + degWK[2][0])) * 2.694);
 
     int aInverted = updates - aFixed;  //RLR
 
     pca2.setPWM(0, 0, 115 + (180 - (((float)((degWK[0][0] + degWK[0][1]) - degWK[0][0]) / updates) * MovHalf(aInverted, 2, x, times, cycle) + degWK[0][0])) * 2.694);
-    pca2.setPWM(1, 0, 115 + (180 - MovRise(degWK[1][0], degWK[1][1], 1, 2, aInverted, cycleBinary, cycle, times, direction)) * 2.694);
+    pca2.setPWM(1, 0, 115 + (180 - MovRise(degWK[1][0], degWK[1][1], 3, 2, aInverted, cycleBinary, cycle, times, direction)) * 2.694);
     pca2.setPWM(2, 0, 115 + (180 - (((float)(degWK[2][0] - degWK[2][1]) / updates) * MovHalf(aInverted, 2, x, times, cycle) + degWK[2][1])) * 2.694);
     //
     pca1.setPWM(3, 0, 115 + (90 * 2.694));
