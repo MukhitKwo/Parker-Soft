@@ -88,8 +88,6 @@ void loop() {
       Serial.print(commandFull);
       Written();
     } else {  //if its being controller with controller
-      Serial.print("> ");
-      Serial.println(commandFull);
       command[0] = commandFull;
       Controlled();
     }
@@ -98,12 +96,7 @@ void loop() {
 
 void Controlled() {
 
-  
-  Serial.println("Sex");
-
-  Serial.println(command[0]);
   char type = command[0].charAt(0);
-
 
   switch (type) {
     case 'F':  //WALK FRONT
