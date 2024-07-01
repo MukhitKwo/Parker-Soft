@@ -12,12 +12,30 @@
  */
 
 #include <Adafruit_PWMServoDriver.h>
+#include <SoftwareSerial.h>
 
 Adafruit_PWMServoDriver pca1 = Adafruit_PWMServoDriver(0x40);  // Left side
 Adafruit_PWMServoDriver pca2 = Adafruit_PWMServoDriver(0x41);  // right side
 
+SoftwareSerial bluetooth(2, 3);  //RX TX
+
+int updates = 90;
+int8_t rise = 30;
+int8_t walkTimes = 4;
+int8_t rotateTimes = 2;
+
+int degWK[6][2] = {
+  { 90, 50 },   //front and back > base (-/+)
+  { 80, 60 },   //front and back > coxa (->)
+  { 35, 0 },    //front and back > tibia (->)
+  { 65, 115 },  //middle > base (->)
+  { 60, 70 },   //middle > coxa (->)
+  { 10, 20 }    //middle > tibia (->)
+};
+
 void setup() {
   Serial.begin(9600);
+  bluetooth.begin(9600);
 
   pca1.begin();
   pca1.setPWMFreq(60);
@@ -56,46 +74,123 @@ void splitStringIntoWords(String str) {
 //Read the command and send it to the correct funtion
 
 bool showDone = true;
+bool sendingComands = true;
 
 void loop() {
 
-  if (Serial.available()) {
-    String commandFull = Serial.readString();
-    splitStringIntoWords(commandFull);
-    Serial.print("> ");
-    Serial.print(commandFull);
+  if (bluetooth.available()) {
+    String commandFull = bluetooth.readString();
+    char isControler = (commandFull.length() == 1 || commandFull.length() == 2);
 
-    String type = command[0];
-
-    if (type == "walk") {  //line 99
-      Walk();
-    } else if (type == "rotate") {  //line 238
-      Rotate();
-    } else if (type == "play") {  //line 347
-      Play();
-    } else if (type == "move") {  //line 521
-      Move();
-    } else if (type == "set") {  //line 592
-      Set(false, 0);
-    } else if (type == "turn") {  //line 649
-      Turn();
-    } else if (type == "define") {  //line 703
-      Define();
-    } else if (type == "show") {  //line 719
-      Show();
-    } else if (type == "auto") {
-      Auto();
-    } else {
-      Serial.print("\n! Command error at 'type' input");
-    }
-
-    if (!showDone) {
-      Serial.println("");
-    } else {
-      Serial.println(" <Done>");
+    if (!isControler) {  //if is a written command
+      splitStringIntoWords(commandFull);
+      Serial.print("> ");
+      Serial.print(commandFull);
+      Written();
+    } else {  //if its being controller with controller
+      Serial.print("> ");
+      Serial.println(commandFull);
+      command[0] = commandFull;
+      Controlled();
     }
   }
 }
+
+void Controlled() {
+
+  
+  Serial.println("Sex");
+
+  Serial.println(command[0]);
+  char type = command[0].charAt(0);
+
+
+  switch (type) {
+    case 'F':  //WALK FRONT
+      command[1] = "f";
+      command[2] = String(walkTimes);
+      Walk();
+      break;
+    case 'B':  //WALK BACK
+      command[1] = "b";
+      command[2] = String(walkTimes);
+      Walk();
+      break;
+    case 'L':  //WALK LEFT
+      command[1] = "l";
+      command[2] = String(walkTimes);
+      ;
+      Walk();
+      break;
+    case 'R':  //WALK RIGHT
+      command[1] = "r";
+      command[2] = String(walkTimes);
+      Walk();
+      break;
+    case 'S':  //ROTATE LEFT
+      command[1] = "l";
+      command[2] = String(rotateTimes);
+      Rotate();
+      break;
+    case 'C':  //ROTATE RIGHT
+      command[1] = "r";
+      command[2] = String(rotateTimes);
+      Rotate();
+      break;
+    case 'T':  //LESS UPDATES (faster)
+      command[1] = "up";
+      command[2] = String((updates >= 30) ? updates - 20 : updates);
+      Define();
+      break;
+    case 'X':  //MORE UPDATES (slower)
+      command[1] = "up";
+      command[2] = String((updates <= 180) ? updates + 20 : updates);
+      Define();
+      break;
+    case 'A':  //SET 2
+      Set(true, 2);
+      break;
+    case 'P':  //TURN OFF 0
+      command[1] = "off";
+      command[2] = "0";
+      Turn();
+      break;
+  }
+}
+
+void Written() {
+
+  String type = command[0];
+
+  if (type == "walk") {  //line 99
+    Walk();
+  } else if (type == "rotate") {  //line 238
+    Rotate();
+  } else if (type == "play") {  //line 347
+    Play();
+  } else if (type == "move") {  //line 521
+    Move();
+  } else if (type == "set") {  //line 592
+    Set(false, 0);
+  } else if (type == "turn") {  //line 649
+    Turn();
+  } else if (type == "define") {  //line 703
+    Define();
+  } else if (type == "show") {  //line 719
+    Show();
+  } else if (type == "auto") {
+    Auto();
+  } else {
+    Serial.print("\n! Command error at 'type' input");
+  }
+
+  if (!showDone) {
+    Serial.println("");
+  } else {
+    Serial.println(" <Done>");
+  }
+}
+
 
 //==========================================<//>============================================> WALK
 //Execute the correct walk function depending of the direction
@@ -116,18 +211,6 @@ void Walk() {
     Serial.print("\n! Command error at 'direction' input");
   }
 }
-
-int degWK[6][2] = {
-  { 90, 50 },   //front and back > base (-/+)
-  { 80, 60 },   //front and back > coxa (->)
-  { 35, 0 },    //front and back > tibia (->)
-  { 65, 115 },  //middle > base (->)
-  { 60, 70 },   //middle > coxa (->)
-  { 10, 20 }    //middle > tibia (->)
-};
-
-int updates = 60;  //defualt is 90
-int8_t rise = 30;
 
 void MovWalk(int typeWalk, int8_t direction, int8_t times) {
 
@@ -708,10 +791,14 @@ void Define() {
 
   String variable = command[1];
 
-  if (variable == "upc") {  //change 'updates' value (updates per cycle)
+  if (variable == "up") {  //change 'updates' value (updates per cycle)
     updates = command[2].toInt();
   } else if (variable == "rise") {  //change 'rise' value
     rise = command[2].toInt();
+  } else if (variable == "wt") {  //change 'walkTimes' value
+    walkTimes = command[2].toInt();
+  } else if (variable == "rt") {  //change 'rotateTimes' value
+    rotateTimes = command[2].toInt();
   } else {
     Serial.print("\n! Command error at 'variable' input");
   }
@@ -743,28 +830,37 @@ void Show() {
 
 void Auto() {
 
-  String directionArray[] = { "f", "b", "r", "l" };
+  String directionArray[] = { "f", "b", "l", "r" };
 
-  do {
+  int8_t randomType = random(100);    // 0 99
+  int8_t randomMode = random(4);      // 0 to 3
+  int8_t randomTimes = random(2, 8);  // 2 to 7
 
-    int8_t randType = random(100);    // 0 99
-    int8_t randMode = random(4);      // 0 to 3 (direction)
-    int8_t randTimes = random(2, 6);  // 2 to 5 times
+  command[2] = randomTimes;
 
-    if (randType < 75) {  //walk
+  Serial.println(randomType);
 
-      command[1] = directionArray[randMode];
-      command[2] = randTimes;
-      Walk();
-
-    } else {  //rotate
-
-      command[1] = directionArray[randMode % 2 + 2];
-      command[2] = randTimes;
-      Rotate();
-    }
-
-  } while (!Serial.available());
+  if (randomType < 50) {
+    command[1] = directionArray[randomMode];
+    Serial.println("walk");
+    Serial.println(command[1]);
+    Serial.println(command[2]);
+    // Walk();
+  } else if (randomType < 90) {
+    command[1] = directionArray[randomMode % 2 + 2];
+    Serial.println("rotate");
+    Serial.println(command[1]);
+    Serial.println(command[2]);
+    // Rotate();
+  } else {
+    command[1] = directionArray[randomMode];
+    command[3] = "fix";
+    Serial.println("play");
+    Serial.println(command[1]);
+    Serial.println(command[2]);
+    Serial.println(command[3]);
+    // Play();
+  }
 }
 
-//Welcome to the 770th line :D, also 'End of Code'
+//Welcome to the 737th line :D, also 'End of Code'
