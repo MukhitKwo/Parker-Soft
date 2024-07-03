@@ -19,7 +19,7 @@ Adafruit_PWMServoDriver pca2 = Adafruit_PWMServoDriver(0x41);  // right side
 
 SoftwareSerial bluetooth(2, 3);  //RX TX
 
-int updates = 90;
+int updates = 40;  //default is 90
 int8_t rise = 30;
 int8_t walkTimes = 4;
 int8_t rotateTimes = 2;
@@ -94,6 +94,39 @@ void loop() {
   }
 }
 
+void Written() {
+
+  String type = command[0];
+
+  if (type == "walk") {  //line 99
+    Walk();
+  } else if (type == "rotate") {
+    Rotate();
+  } else if (type == "play") {
+    Play();
+  } else if (type == "move") {
+    Move();
+  } else if (type == "set") {
+    Set(false, 0);
+  } else if (type == "turn") {
+    Turn();
+  } else if (type == "define") {
+    Define();
+  } else if (type == "show") {
+    Show();
+  } else if (type == "auto") {
+    Auto();
+  } else {
+    Serial.print("\n! Command error at 'type' input");
+  }
+
+  if (!showDone) {
+    Serial.println("");
+  } else {
+    Serial.println(" <Done>");
+  }
+}
+
 void Controlled() {
 
   char type = command[0].charAt(0);
@@ -130,14 +163,20 @@ void Controlled() {
       command[2] = String(rotateTimes);
       Rotate();
       break;
-    case 'T':  //LESS UPDATES (faster)
-      command[1] = "up";
-      command[2] = String((updates >= 30) ? updates - 20 : updates);
+    case 'T':  //Walk + 2; Rotate + 1
+      command[1] = "wt";
+      command[2] = String((walkTimes < 12) ? walkTimes + 2 : walkTimes);
+      Define();
+      command[1] = "rt";
+      command[2] = String((rotateTimes < 6) ? rotateTimes + 1 : rotateTimes);
       Define();
       break;
-    case 'X':  //MORE UPDATES (slower)
-      command[1] = "up";
-      command[2] = String((updates <= 180) ? updates + 20 : updates);
+    case 'X':  //Walk - 2; Rotate - 1
+      command[1] = "wt";
+      command[2] = String((walkTimes > 2) ? walkTimes - 2 : walkTimes);
+      Define();
+      command[1] = "rt";
+      command[2] = String((rotateTimes > 1) ? rotateTimes - 1 : rotateTimes);
       Define();
       break;
     case 'A':  //SET 2
@@ -150,40 +189,6 @@ void Controlled() {
       break;
   }
 }
-
-void Written() {
-
-  String type = command[0];
-
-  if (type == "walk") {  //line 99
-    Walk();
-  } else if (type == "rotate") {  //line 238
-    Rotate();
-  } else if (type == "play") {  //line 347
-    Play();
-  } else if (type == "move") {  //line 521
-    Move();
-  } else if (type == "set") {  //line 592
-    Set(false, 0);
-  } else if (type == "turn") {  //line 649
-    Turn();
-  } else if (type == "define") {  //line 703
-    Define();
-  } else if (type == "show") {  //line 719
-    Show();
-  } else if (type == "auto") {
-    Auto();
-  } else {
-    Serial.print("\n! Command error at 'type' input");
-  }
-
-  if (!showDone) {
-    Serial.println("");
-  } else {
-    Serial.println(" <Done>");
-  }
-}
-
 
 //==========================================<//>============================================> WALK
 //Execute the correct walk function depending of the direction
@@ -819,7 +824,7 @@ void Show() {
 }
 
 //==========================================<//>============================================> Auto
-//###
+//Execute a random walk or rotation on a random direction
 
 void Auto() {
 
@@ -827,33 +832,19 @@ void Auto() {
 
   int8_t randomType = random(100);    // 0 99
   int8_t randomMode = random(4);      // 0 to 3
-  int8_t randomTimes = random(2, 8);  // 2 to 7
+  int8_t randomTimes = random(2, 6);  // 2 to 5
 
   command[2] = randomTimes;
 
   Serial.println(randomType);
 
-  if (randomType < 50) {
+  if (randomType < 75) {
     command[1] = directionArray[randomMode];
-    Serial.println("walk");
-    Serial.println(command[1]);
-    Serial.println(command[2]);
-    // Walk();
-  } else if (randomType < 90) {
-    command[1] = directionArray[randomMode % 2 + 2];
-    Serial.println("rotate");
-    Serial.println(command[1]);
-    Serial.println(command[2]);
-    // Rotate();
+    Walk();
   } else {
-    command[1] = directionArray[randomMode];
-    command[3] = "fix";
-    Serial.println("play");
-    Serial.println(command[1]);
-    Serial.println(command[2]);
-    Serial.println(command[3]);
-    // Play();
+    command[1] = directionArray[randomMode % 2 + 2];
+    Rotate();
   }
 }
 
-//Welcome to the 737th line :D, also 'End of Code'
+//Welcome to the 850th line :D, also 'End of Code'
